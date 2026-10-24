@@ -243,6 +243,14 @@ header p { margin: 5px 0 0; font-size: 0.95rem; opacity: 0.95; }
     border: 2px solid #f59e0b;
 }
 
+@keyframes blinkNotice {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.96); }
+}
+.blink-badge {
+    animation: blinkNotice 1.8s infinite;
+}
+
 @media print {
     body * { visibility: hidden; }
     #certificate-printable-card, #certificate-printable-card * { visibility: visible; }
@@ -363,22 +371,51 @@ header p { margin: 5px 0 0; font-size: 0.95rem; opacity: 0.95; }
 
         <!-- Tab 5: Notice -->
         <div id="teacher-tab-notice" style="display: none;">
-            <h3 style="color: #b45309;">📢 छात्र सूचना प्रसारण (Notice Board)</h3>
-            <p>यहाँ लिखा गया संदेश सभी छात्रों के मुख्य पृष्ठ पर तुरंत दिखाई देगा:</p>
-            <textarea id="notice-input-text" style="width: 100%; height: 110px; padding: 12px; border-radius: 8px; font-size: 1rem; border: 2px solid #cbd5e1;"></textarea>
-            <div style="margin-top: 10px;">
-                <button class="btn btn-primary" onclick="broadcastNotice()">📡 सभी छात्रों को प्रसारित करें (Broadcast)</button>
+            <h3 style="color: #b45309; margin-top: 0;">📢 छात्र सूचना प्रसारण (Notice Board Editor)</h3>
+            <p style="color: #64748b; font-size: 0.95rem;">यहाँ लिखा गया संदेश ऐप खुलते ही सभी छात्रों के मोबाइल पर सबसे ऊपर दिखेगा:</p>
+            
+            <div style="margin-bottom: 12px;">
+                <label style="font-weight: 700; color: #475569;">त्वरित संदेश टेम्पलेट (Quick Templates):</label>
+                <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px;">
+                    <button type="button" class="btn btn-outline" onclick="applyNoticeTemplate(1)" style="font-size: 0.82rem; padding: 5px 10px;">📌 आगामी टेस्ट सूचना</button>
+                    <button type="button" class="btn btn-outline" onclick="applyNoticeTemplate(2)" style="font-size: 0.82rem; padding: 5px 10px;">📌 व्याकरण नोट्स सूचना</button>
+                    <button type="button" class="btn btn-outline" onclick="applyNoticeTemplate(3)" style="font-size: 0.82rem; padding: 5px 10px;">📌 10/10 प्रमाणपत्र प्रोत्साहन</button>
+                </div>
             </div>
-            <div id="notice-status-msg" style="margin-top: 10px; font-weight: bold; color: green;"></div>
+
+            <textarea id="notice-input-text" oninput="updateNoticePreview(this.value)" style="width: 100%; height: 120px; padding: 12px; border-radius: 8px; font-size: 1rem; border: 2px solid #cbd5e1; font-family: inherit;"></textarea>
+            
+            <div style="margin-top: 12px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <button class="btn btn-primary" onclick="broadcastNotice()" style="padding: 10px 20px; font-size: 1rem; background: #ea580c;">📢 सूचना प्रकाशित करें (Save & Broadcast)</button>
+                <span id="notice-status-msg" style="font-weight: bold; color: green;"></span>
+            </div>
+
+            <!-- Live Preview -->
+            <div style="margin-top: 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px;">
+                <div style="font-weight: 700; color: #64748b; font-size: 0.9rem; margin-bottom: 6px;">👀 छात्र स्क्रीन पर लाइव पूर्वावलोकन (Preview):</div>
+                <div id="notice-preview-box" style="background: #fffbeb; border: 2px dashed #f59e0b; padding: 12px; border-radius: 8px; color: #78350f; font-weight: 600;"></div>
+            </div>
         </div>
     </div>
 
 
     <!-- 2. STUDENT LOGIN SCREEN -->
     <div id="login-screen">
-        <div id="guruji-notice-card-front" style="background: #fffbeb; border: 2px dashed #f59e0b; padding: 14px 18px; border-radius: 10px; margin-bottom: 20px; text-align: center;">
-            <div style="font-weight: 800; color: #b45309; font-size: 1.05rem;">📢 श्री पंकज पटनायक (व्याख्याता हिन्दी) का संदेश:</div>
-            <div id="notice-front-content" style="font-size: 0.98rem; color: #78350f; margin-top: 5px;">प्रिय विद्यार्थियों, शासकीय हाईस्कूल पोतरा के हिन्दी अध्ययन एवं क्विज़ पोर्टल में आपका स्वागत है। नियमित अध्ययन करें और टेस्ट देकर प्रमाणपत्र प्राप्त करें!</div>
+        <!-- NOTICE BOARD AT VERY TOP (LOGIN SCREEN) -->
+        <div class="school-notice-board" style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border: 2px solid #f59e0b; border-left: 8px solid #b45309; border-radius: 12px; padding: 14px 18px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; border-bottom: 1px dashed #f59e0b; padding-bottom: 8px; margin-bottom: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span class="blink-badge" style="background: #dc2626; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 800;">🔴 नवीन सूचना</span>
+                    <b style="color: #9a3412; font-size: 1.05rem;">📢 शासकीय हाईस्कूल पोतरा • सूचना पट्ट (Notice Board)</b>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span class="notice-date-display" style="font-size: 0.82rem; color: #78350f; font-weight: 600;">दिनांक: आज</span>
+                    <button onclick="speakNotice()" class="btn btn-outline" style="padding: 2px 8px; font-size: 0.8rem; border-color: #b45309; color: #b45309;">🔊 सूचना सुनें</button>
+                </div>
+            </div>
+            <div class="notice-content-text" style="font-size: 0.98rem; color: #451a03; line-height: 1.5; font-weight: 600;">
+                प्रिय विद्यार्थियों, शासकीय हाईस्कूल पोतरा के हिन्दी अध्ययन एवं क्विज़ पोर्टल में आपका स्वागत है। नियमित अध्ययन करें और टेस्ट देकर प्रमाणपत्र प्राप्त करें! - श्री पंकज पटनायक (व्याख्याता हिन्दी)
+            </div>
         </div>
 
         <div style="background: white; border-radius: 14px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); max-width: 580px; margin: 0 auto; border: 1px solid #fee2e2;">
@@ -485,6 +522,23 @@ header p { margin: 5px 0 0; font-size: 0.95rem; opacity: 0.95; }
 
     <!-- 3. HOME SCREEN -->
     <div id="home-screen" style="display: none;">
+        <!-- NOTICE BOARD AT VERY TOP (HOME SCREEN) -->
+        <div class="school-notice-board" style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border: 2px solid #f59e0b; border-left: 8px solid #b45309; border-radius: 12px; padding: 14px 18px; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; border-bottom: 1px dashed #f59e0b; padding-bottom: 8px; margin-bottom: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span class="blink-badge" style="background: #dc2626; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 800;">🔴 नवीन सूचना</span>
+                    <b style="color: #9a3412; font-size: 1.05rem;">📢 शासकीय हाईस्कूल पोतरा • सूचना पट्ट (Notice Board)</b>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span class="notice-date-display" style="font-size: 0.82rem; color: #78350f; font-weight: 600;">दिनांक: आज</span>
+                    <button onclick="speakNotice()" class="btn btn-outline" style="padding: 2px 8px; font-size: 0.8rem; border-color: #b45309; color: #b45309;">🔊 सूचना सुनें</button>
+                </div>
+            </div>
+            <div class="notice-content-text" style="font-size: 0.98rem; color: #451a03; line-height: 1.5; font-weight: 600;">
+                प्रिय विद्यार्थियों, शासकीय हाईस्कूल पोतरा के हिन्दी अध्ययन एवं क्विज़ पोर्टल में आपका स्वागत है। नियमित अध्ययन करें और टेस्ट देकर प्रमाणपत्र प्राप्त करें! - श्री पंकज पटनायक (व्याख्याता हिन्दी)
+            </div>
+        </div>
+
         <!-- Student Welcome Bar -->
         <div style="background: white; padding: 12px 18px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; border-left: 5px solid #dc2626;">
             <div>
@@ -823,6 +877,11 @@ function speakDailyThought() {
 
 // Initialize
 window.addEventListener('DOMContentLoaded', () => {
+    const cachedNotice = localStorage.getItem('cgbse_hindi_notice');
+    const cachedNoticeDate = localStorage.getItem('cgbse_hindi_notice_date');
+    if (cachedNotice) {
+        updateAllNoticeDisplays(cachedNotice, cachedNoticeDate);
+    }
     loadCachedStudent();
     renderTopicsGrid();
     populateNotesDropdown();
@@ -1458,8 +1517,7 @@ async function syncCloudData() {
             const data = await res.json();
             if (data && data.data) {
                 if (data.data.notice) {
-                    document.getElementById('notice-front-content').innerText = data.data.notice;
-                    document.getElementById('notice-input-text').value = data.data.notice;
+                    updateAllNoticeDisplays(data.data.notice, data.data.noticeDate);
                 }
                 if (data.data.allStudentsData && data.data.allStudentsData.length) {
                     localStorage.setItem('cgbse_hindi_exam_logs', JSON.stringify(data.data.allStudentsData));
@@ -1529,23 +1587,79 @@ async function postFeedback(fb) {
     } catch(e) {}
 }
 
-function broadcastNotice() {
+function updateAllNoticeDisplays(msg, dateStr) {
+    if (!dateStr) dateStr = new Date().toLocaleDateString('en-IN');
+    localStorage.setItem('cgbse_hindi_notice', msg);
+    localStorage.setItem('cgbse_hindi_notice_date', dateStr);
+
+    document.querySelectorAll('.notice-content-text').forEach(el => {
+        el.innerText = msg;
+    });
+    document.querySelectorAll('.notice-date-display').forEach(el => {
+        el.innerText = `दिनांक: ${dateStr}`;
+    });
+    const prev = document.getElementById('notice-preview-box');
+    if (prev) prev.innerText = msg;
+    const inp = document.getElementById('notice-input-text');
+    if (inp && !inp.value) inp.value = msg;
+}
+
+function speakNotice() {
+    const el = document.querySelector('.notice-content-text');
+    if (el) {
+        speakText("शासकीय हाईस्कूल पोतरा, सूचना पट्ट. " + el.innerText);
+    }
+}
+
+function updateNoticePreview(val) {
+    const prev = document.getElementById('notice-preview-box');
+    if (prev) prev.innerText = val || "सूचना यहाँ दिखेगी...";
+}
+
+function applyNoticeTemplate(idx) {
+    let t = "";
+    if (idx === 1) {
+        t = "प्रिय विद्यार्थियों, कल कक्षा 10वीं व 9वीं हिन्दी का विशेष मॉक टेस्ट पोर्टल पर लिया जाएगा। सभी विद्यार्थी 35 विषयों का अध्ययन पूर्ण रखें और टेस्ट में अनिवार्य रूप से भाग लें। - श्री पंकज पटनायक (व्याख्याता हिन्दी)";
+    } else if (idx === 2) {
+        t = "सूचना: छत्तीसगढ़ बोर्ड परीक्षा हेतु आवश्यक व्याकरण नियम एवं साहित्य नोट्स ऐप के 'नियम एवं नोट्स' विकल्प में जोड़ दिए गए हैं। सभी छात्र इनका गहन अध्ययन करें। - श्री पंकज पटनायक";
+    } else if (idx === 3) {
+        t = "बधाई! जिन विद्यार्थियों ने क्विज़ में 10/10 अंक प्राप्त किए हैं, वे अपना डिजिटल प्रमाणपत्र डाउनलोड कर व्हाट्सएप ग्रुप में साझा करें। अन्य विद्यार्थी पुनः प्रयास करें। - व्याख्याता हिन्दी";
+    }
+    document.getElementById('notice-input-text').value = t;
+    updateNoticePreview(t);
+}
+
+async function broadcastNotice() {
     const msg = document.getElementById('notice-input-text').value.trim();
-    if (!msg) return;
-    document.getElementById('notice-front-content').innerText = msg;
+    if (!msg) {
+        alert("कृपया सूचना का विवरण दर्ज करें!");
+        return;
+    }
+    const today = new Date().toLocaleDateString('en-IN');
+    updateAllNoticeDisplays(msg, today);
+
     try {
         fetch(CLOUD_API_URL, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 name: "cgbse_hindi_ghs_potra_db_7987700143",
-                data: { notice: msg }
+                data: { 
+                    notice: msg,
+                    noticeDate: today
+                }
             })
         });
         document.getElementById('notice-status-msg').innerText = "✅ सूचना सफलतापूर्वक सभी छात्रों को प्रसारित कर दी गई!";
+        fetch(NTFY_STREAM_URL, { method: 'POST', body: `नवीन सूचना: ${msg}` });
     } catch(e) {
         document.getElementById('notice-status-msg').innerText = "✅ सूचना स्थानीय रूप से अपडेट हो गई!";
     }
+
+    setTimeout(() => {
+        const s = document.getElementById('notice-status-msg');
+        if (s) s.innerText = "";
+    }, 4000);
 }
 
 function fetchResults() {
