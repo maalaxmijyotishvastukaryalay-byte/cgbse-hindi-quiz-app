@@ -808,6 +808,7 @@ let currentScore = 0;
 let timer = null;
 let timeLeft = 30;
 let audioTimeout = null;
+let autoNextTimeout = null;
 let userAnswers = []; // For Review Modal Answer Key
 let currentFilter = 'all';
 
@@ -1027,6 +1028,7 @@ function loadQuestion() {
     clearInterval(timer);
     window.speechSynthesis.cancel();
     clearTimeout(audioTimeout);
+    clearTimeout(autoNextTimeout);
 
     const q = currentQuestions[currentQIndex];
     document.getElementById('question-counter').innerText = `प्रश्न ${currentQIndex + 1} / ${currentQuestions.length}`;
@@ -1067,6 +1069,7 @@ function selectOption(selectedBtn, optText, q) {
     clearInterval(timer);
     window.speechSynthesis.cancel();
     clearTimeout(audioTimeout);
+    clearTimeout(autoNextTimeout);
 
     const buttons = document.querySelectorAll('.option-btn');
     buttons.forEach(b => b.disabled = true);
@@ -1094,11 +1097,17 @@ function selectOption(selectedBtn, optText, q) {
     }
 
     document.getElementById('next-q-btn').style.display = 'inline-flex';
+
+    // उत्तर देने के तुरंत बाद प्रश्न अपने आप बदल जाए (Auto-Advance in ~1.5s)
+    autoNextTimeout = setTimeout(() => {
+        nextQuestion();
+    }, 1600);
 }
 
 function autoTimeUp(q) {
     window.speechSynthesis.cancel();
     clearTimeout(audioTimeout);
+    clearTimeout(autoNextTimeout);
 
     const buttons = document.querySelectorAll('.option-btn');
     buttons.forEach(b => {
@@ -1114,11 +1123,17 @@ function autoTimeUp(q) {
     playSound('wrong');
     setTimeout(() => speakText("समय समाप्त! सही उत्तर है, " + q.ans), 300);
     document.getElementById('next-q-btn').style.display = 'inline-flex';
+
+    // समय समाप्त होने पर भी 1.8s में अपने आप अगला प्रश्न आ जाए
+    autoNextTimeout = setTimeout(() => {
+        nextQuestion();
+    }, 1800);
 }
 
 function nextQuestion() {
     window.speechSynthesis.cancel();
     clearTimeout(audioTimeout);
+    clearTimeout(autoNextTimeout);
     currentQIndex++;
     if (currentQIndex < currentQuestions.length) {
         loadQuestion();
@@ -1132,6 +1147,7 @@ function exitQuiz() {
         clearInterval(timer);
         window.speechSynthesis.cancel();
         clearTimeout(audioTimeout);
+        clearTimeout(autoNextTimeout);
         showHomeScreen();
     }
 }
@@ -1140,6 +1156,7 @@ function showResult() {
     clearInterval(timer);
     window.speechSynthesis.cancel();
     clearTimeout(audioTimeout);
+    clearTimeout(autoNextTimeout);
 
     document.getElementById('quiz-screen').style.display = 'none';
     document.getElementById('result-screen').style.display = 'block';
