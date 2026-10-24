@@ -475,7 +475,10 @@ header p { margin: 5px 0 0; font-size: 0.95rem; opacity: 0.95; }
 
         <!-- Daily Thought / Dohe Card -->
         <div style="background: white; border-radius: 10px; padding: 14px 18px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); margin-bottom: 20px; border-left: 5px solid #ea580c; text-align: center;">
-            <div style="font-weight: 800; color: #ea580c; font-size: 0.96rem;">🌸 आज का प्रेरक दोहा / सुविचार</div>
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                <div style="font-weight: 800; color: #ea580c; font-size: 0.96rem;">🌸 आज का प्रेरक दोहा / सुविचार</div>
+                <button onclick="speakDailyThought()" class="btn btn-outline" style="padding: 3px 10px; font-size: 0.82rem; border-color: #ea580c; color: #ea580c;">🔊 दोहा सुनें</button>
+            </div>
             <div id="daily-thought-text" style="font-size: 1.05rem; font-weight: 700; color: #1e293b; margin: 6px 0;">"पोथी पढ़ि पढ़ि जग मुआ, पंडित भया न कोय। ढाई आखर प्रेम का, पढ़े सो पंडित होय॥"</div>
             <div id="daily-thought-meaning" style="font-size: 0.9rem; color: #64748b;">(भावार्थ: केवल पोथियों को पढ़ने से कोई विद्वान नहीं होता, जो प्रेम और दया के मर्म को समझता है वही सच्चा ज्ञानी है। - संत कबीर)</div>
         </div>
@@ -495,9 +498,17 @@ header p { margin: 5px 0 0; font-size: 0.95rem; opacity: 0.95; }
     <div id="quiz-screen" style="display: none;">
         <div class="quiz-container">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px;">
-                <button class="btn btn-outline" onclick="exitQuiz()" style="padding: 6px 12px; font-size: 0.88rem;">🔙 विषय सूची</button>
-                <div style="font-weight: 800; color: #991b1b; font-size: 1.15rem;" id="quiz-topic-title"></div>
-                <div style="font-weight: 700; color: #ea580c; font-size: 1rem;">⏱️ <span id="timer-count">30</span>s</div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <button class="btn btn-outline" onclick="exitQuiz()" style="padding: 6px 12px; font-size: 0.88rem;">🔙 विषय सूची</button>
+                    <div style="font-weight: 800; color: #991b1b; font-size: 1.12rem;" id="quiz-topic-title"></div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <label style="font-size: 0.95rem; color: #334155; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                        <input type="checkbox" id="autoplay-toggle" checked style="width: 18px; height: 18px; cursor: pointer;"> ऑटो-प्ले 🔊
+                    </label>
+                    <button onclick="playAudioQuestion()" title="प्रश्न बोलकर सुनें" style="background: #ea580c; color: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 1.25rem; cursor: pointer; box-shadow: 0 2px 6px rgba(234, 88, 12, 0.4); display: flex; align-items: center; justify-content: center;">🔊</button>
+                    <div style="font-weight: 800; color: #ea580c; font-size: 1.05rem; background: #fff7ed; padding: 4px 10px; border-radius: 20px; border: 1px solid #fed7aa;">⏱️ <span id="timer-count">30</span>s</div>
+                </div>
             </div>
 
             <div style="display: flex; justify-content: space-between; align-items: center; margin: 12px 0 6px;">
@@ -650,6 +661,38 @@ let currentQIndex = 0;
 let currentScore = 0;
 let timer = null;
 let timeLeft = 30;
+let audioTimeout = null;
+
+// Speech Synthesis & Audio Functions (संस्कृत ऐप जैसा बोलकर प्रश्न पूछना)
+function playAudioQuestion(isAuto = false) {
+    if (!currentQuestions || !currentQuestions[currentQIndex]) return;
+    if (isAuto && document.getElementById('autoplay-toggle') && !document.getElementById('autoplay-toggle').checked) return;
+    window.speechSynthesis.cancel();
+    let q = currentQuestions[currentQIndex];
+    let cleanQ = q.q.replace(/_+/g, " रिक्त स्थान ").replace(/\.(3,)/g, " रिक्त स्थान ");
+    let optText = q.options.map((o, i) => ['क', 'ख', 'ग', 'घ'][i] + " . " + o).join(", ");
+    let text = cleanQ + " . विकल्प हैं, " + optText;
+    let utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'hi-IN';
+    utterance.rate = 0.92;
+    window.speechSynthesis.speak(utterance);
+}
+
+function speakText(txt) {
+    try {
+        window.speechSynthesis.cancel();
+        let u = new SpeechSynthesisUtterance(txt);
+        u.lang = 'hi-IN';
+        u.rate = 0.92;
+        window.speechSynthesis.speak(u);
+    } catch(e) {}
+}
+
+function speakDailyThought() {
+    const dText = document.getElementById('daily-thought-text').innerText;
+    const dMeaning = document.getElementById('daily-thought-meaning').innerText;
+    speakText("आज का प्रेरक दोहा. " + dText + " . " + dMeaning);
+}
 
 // Web Audio API Sound Generation (100% offline friendly!)
 const audioCtx = (window.AudioContext || window.webkitAudioContext) ? new (window.AudioContext || window.webkitAudioContext)() : null;
@@ -792,6 +835,9 @@ function startQuiz(topic) {
 
 function loadQuestion() {
     clearInterval(timer);
+    window.speechSynthesis.cancel();
+    clearTimeout(audioTimeout);
+
     const q = currentQuestions[currentQIndex];
     document.getElementById('question-counter').innerText = `प्रश्न ${currentQIndex + 1} / ${currentQuestions.length}`;
     document.getElementById('current-score-counter').innerText = `अंक: ${currentScore}`;
@@ -811,6 +857,9 @@ function loadQuestion() {
         optContainer.appendChild(btn);
     });
 
+    // ऑटोमैटिक बोलकर प्रश्न पूछना (Sanskrit App pattern)
+    audioTimeout = setTimeout(() => playAudioQuestion(true), 400);
+
     // 30s Countdown Timer
     timeLeft = 30;
     document.getElementById('timer-count').innerText = timeLeft;
@@ -826,6 +875,9 @@ function loadQuestion() {
 
 function selectOption(selectedBtn, optText, q) {
     clearInterval(timer);
+    window.speechSynthesis.cancel();
+    clearTimeout(audioTimeout);
+
     const buttons = document.querySelectorAll('.option-btn');
     buttons.forEach(b => b.disabled = true);
 
@@ -838,18 +890,23 @@ function selectOption(selectedBtn, optText, q) {
         currentScore++;
         document.getElementById('current-score-counter').innerText = `अंक: ${currentScore}`;
         playSound('correct');
+        setTimeout(() => speakText("अति सुंदर! सही उत्तर।"), 300);
     } else {
         selectedBtn.classList.add('wrong');
         buttons.forEach(b => {
             if (b.innerText.includes(q.ans)) b.classList.add('correct');
         });
         playSound('wrong');
+        setTimeout(() => speakText("गलत उत्तर। सही उत्तर है, " + q.ans), 300);
     }
 
     document.getElementById('next-q-btn').style.display = 'inline-flex';
 }
 
 function autoTimeUp(q) {
+    window.speechSynthesis.cancel();
+    clearTimeout(audioTimeout);
+
     const buttons = document.querySelectorAll('.option-btn');
     buttons.forEach(b => {
         b.disabled = true;
@@ -859,10 +916,13 @@ function autoTimeUp(q) {
     expBox.innerHTML = `<b>⏰ समय समाप्त! सही उत्तर है:</b> ${q.ans}<br><b>व्याख्या:</b> ${q.exp}`;
     expBox.style.display = 'block';
     playSound('wrong');
+    setTimeout(() => speakText("समय समाप्त! सही उत्तर है, " + q.ans), 300);
     document.getElementById('next-q-btn').style.display = 'inline-flex';
 }
 
 function nextQuestion() {
+    window.speechSynthesis.cancel();
+    clearTimeout(audioTimeout);
     currentQIndex++;
     if (currentQIndex < currentQuestions.length) {
         loadQuestion();
@@ -874,12 +934,16 @@ function nextQuestion() {
 function exitQuiz() {
     if (confirm("क्या आप क्विज़ छोड़कर मुख्य पृष्ठ पर जाना चाहते हैं?")) {
         clearInterval(timer);
+        window.speechSynthesis.cancel();
+        clearTimeout(audioTimeout);
         showHomeScreen();
     }
 }
 
 function showResult() {
     clearInterval(timer);
+    window.speechSynthesis.cancel();
+    clearTimeout(audioTimeout);
     document.getElementById('quiz-screen').style.display = 'none';
     document.getElementById('result-screen').style.display = 'block';
 
